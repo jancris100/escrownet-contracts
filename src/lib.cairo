@@ -1,1 +1,1 @@
-pub mod escrownet_contract;
+pub mod escrow;
