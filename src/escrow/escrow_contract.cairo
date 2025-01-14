@@ -28,7 +28,9 @@ mod EscrowContract {
         depositor: ContractAddress,
         arbiter: ContractAddress
     ) {
-        
+        self.benefeciary.write(benefeciary);
+        self.depositor.write(depositor);
+        self.arbiter.write(arbiter);
     }
 
 }
