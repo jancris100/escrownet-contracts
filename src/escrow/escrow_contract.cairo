@@ -21,4 +21,14 @@ mod EscrowContract {
     enum Event {
     }
 
+    #[constructor]
+    fn constructor(
+        ref self: ContractState,
+        benefeciary: ContractAddress,
+        depositor: ContractAddress,
+        arbiter: ContractAddress
+    ) {
+        
+    }
+
 }
