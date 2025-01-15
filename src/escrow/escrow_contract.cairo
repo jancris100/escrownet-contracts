@@ -21,4 +21,16 @@ mod EscrowContract {
     enum Event {
     }
 
+    #[constructor]
+    fn constructor(
+        ref self: ContractState,
+        benefeciary: ContractAddress,
+        depositor: ContractAddress,
+        arbiter: ContractAddress
+    ) {
+        self.benefeciary.write(benefeciary);
+        self.depositor.write(depositor);
+        self.arbiter.write(arbiter);
+    }
+
 }
