@@ -2,7 +2,8 @@ use starknet::{ContractAddress};
 
 #[starknet::contract]
 mod EscrowContract {
-    use starknet::{ContractAddress, storage::Map, contract_address_const};
+    use core::num::traits::Zero;
+    use starknet::{ContractAddress, storage::Map};
     use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess, StoragePathEntry,};
     use starknet::get_block_timestamp;
     use core::starknet::{get_caller_address};
@@ -68,15 +69,18 @@ mod EscrowContract {
     fn get_escrow_details(ref self: ContractState, escrow_id: u256) -> Escrow {
         // Validate if the escrow exists
         let depositor = self.depositor.read();
-        if depositor == 0.try_into().unwrap() {
-            panic!("Escrow does not exist");
-        }
+        assert(!depositor.is_zero(), 'Escrow does not exist');
+
+        let client_address = self.client_address.read();
+        let provider_address = self.provider_address.read();
+        let amount = self.worth_of_asset.read();
+        let balance = self.balance.read();
 
         let escrow = Escrow {
-            client_address: self.client_address.read(),
-            provider_address: self.provider_address.read(),
-            amount: self.worth_of_asset.read(),
-            balance: self.balance.read(),
+            client_address: client_address,
+            provider_address: provider_address,
+            amount: amount,
+            balance: balance,
         };
         return escrow;
     }
