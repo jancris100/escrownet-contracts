@@ -9,6 +9,7 @@ mod EscrowContract {
     use core::starknet::{get_caller_address};
     use crate::escrow::types::Escrow;
   
+  
 
     #[storage]
     struct Storage {
@@ -17,6 +18,9 @@ mod EscrowContract {
         arbiter: ContractAddress,
         time_frame: u64,
         worth_of_asset: u256,
+        client_address: ContractAddress,
+        provider_address: ContractAddress,
+        balance: u256,
         client_address: ContractAddress,
         provider_address: ContractAddress,
         balance: u256,
@@ -62,6 +66,27 @@ mod EscrowContract {
         self.benefeciary.write(benefeciary);
         self.depositor.write(depositor);
         self.arbiter.write(arbiter);
+    }
+
+
+
+    fn get_escrow_details(ref self: ContractState, escrow_id: u256) -> Escrow {
+        // Validate if the escrow exists
+        let depositor = self.depositor.read();
+        assert(!depositor.is_zero(), 'Escrow does not exist');
+
+        let client_address = self.client_address.read();
+        let provider_address = self.provider_address.read();
+        let amount = self.worth_of_asset.read();
+        let balance = self.balance.read();
+
+        let escrow = Escrow {
+            client_address: client_address,
+            provider_address: provider_address,
+            amount: amount,
+            balance: balance,
+        };
+        return escrow;
     }
 
 
