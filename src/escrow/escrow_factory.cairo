@@ -4,7 +4,7 @@ pub use starknet::{
 };
 
 #[starknet::interface]
-pub trait IEscrowFactory {
+pub trait IEscrowFactory<TContractState> {
     fn deploy_escrow(
         ref self: TContractState,
         beneficiary: ContractAddress,
@@ -19,7 +19,7 @@ pub mod EscrowFactory {
     use super::IEscrowFactory;
     use starknet::{
         ContractAddress, class_hash::ClassHash, syscalls::deploy_syscall, SyscallResultTrait,
-        storage::{Map, StoragePointerReadAccess, StoragePointerWriteAccess},
+        storage::{Map},
     };
     use core::traits::{TryInto, Into};
 
@@ -32,21 +32,20 @@ pub mod EscrowFactory {
     }
 
     #[embeddable_as(Escrows)]
-    impl EscrowFactoryImpl<TContractState, +HasComponent> of IEscrowFactory {
+    impl EscrowFactoryImpl<
+        TContractState, +HasComponent<TContractState>
+    > of IEscrowFactory<ComponentState<TContractState>> {
         fn deploy_escrow(
-            ref self: ComponentState,
+            ref self: ComponentState<TContractState>,
             beneficiary: ContractAddress,
             depositor: ContractAddress,
             arbiter: ContractAddress,
             salt: felt252
         ) -> ContractAddress {
-
             let escrow_id = self.escrow_count.read() + 1;
 
             let mut constructor_calldata: Array = array![
-                beneficiary.into(),
-                depositor.into(),
-                arbiter.into()
+                beneficiary.into(), depositor.into(), arbiter.into()
             ];
 
             // Deploy the Escrow contract
