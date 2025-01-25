@@ -45,3 +45,8 @@ fn test_setup() {
     println!("Deployed address: {:?}", contract_address);
 }
 
+#[test]
+fn test initialize_escrow() {
+    
+}
+

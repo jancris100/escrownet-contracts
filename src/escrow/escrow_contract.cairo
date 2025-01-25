@@ -3,7 +3,7 @@ use starknet::{ContractAddress};
 #[starknet::contract]
 mod EscrowContract {
     use core::num::traits::Zero;
-    use starknet::{ContractAddress, storage::Map};
+    use starknet::{ContractAddress, storage::Map, contract_address_const};
     use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess, StoragePathEntry,};
     use starknet::get_block_timestamp;
     use core::starknet::{get_caller_address};
@@ -21,9 +21,9 @@ mod EscrowContract {
         client_address: ContractAddress,
         provider_address: ContractAddress,
         balance: u256,
-        client_address: ContractAddress,
-        provider_address: ContractAddress,
-        balance: u256,
+        // client_address: ContractAddress,
+        // provider_address: ContractAddress,
+        // balance: u256,
         depositor_approve: Map::<ContractAddress, bool>,
         arbiter_approve: Map::<ContractAddress, bool>,
         // Track whether an escrow ID has been used
@@ -91,24 +91,24 @@ mod EscrowContract {
 
 
 
-    fn get_escrow_details(ref self: ContractState, escrow_id: u256) -> Escrow {
-        // Validate if the escrow exists
-        let depositor = self.depositor.read();
-        assert(!depositor.is_zero(), 'Escrow does not exist');
+    // fn get_escrow_details(ref self: ContractState, escrow_id: u256) -> Escrow {
+    //     // Validate if the escrow exists
+    //     let depositor = self.depositor.read();
+    //     assert(!depositor.is_zero(), 'Escrow does not exist');
 
-        let client_address = self.client_address.read();
-        let provider_address = self.provider_address.read();
-        let amount = self.worth_of_asset.read();
-        let balance = self.balance.read();
+    //     let client_address = self.client_address.read();
+    //     let provider_address = self.provider_address.read();
+    //     let amount = self.worth_of_asset.read();
+    //     let balance = self.balance.read();
 
-        let escrow = Escrow {
-            client_address: client_address,
-            provider_address: provider_address,
-            amount: amount,
-            balance: balance,
-        };
-        return escrow;
-    }
+    //     let escrow = Escrow {
+    //         client_address: client_address,
+    //         provider_address: provider_address,
+    //         amount: amount,
+    //         balance: balance,
+    //     };
+    //     return escrow;
+    // }
 
 
     fn approve(ref self: ContractState, benefeciary: ContractAddress) {
