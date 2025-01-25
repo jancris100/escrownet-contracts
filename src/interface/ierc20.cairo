@@ -1,4 +1,5 @@
 use starknet::ContractAddress;
+
 #[starknet::interface]
 pub trait IERC20<TState> {
     fn total_supply(self: @TState) -> u256;
@@ -9,6 +10,7 @@ pub trait IERC20<TState> {
         ref self: TState, sender: ContractAddress, recipient: ContractAddress, amount: u256,
     ) -> bool;
     fn approve(ref self: TState, spender: ContractAddress, amount: u256) -> bool;
+
 }
 
 #[starknet::interface]
