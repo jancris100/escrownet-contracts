@@ -1,13 +1,12 @@
 use escrownet_contract::interface::iescrow::IEscrowDispatcherTrait;
 use starknet::ContractAddress;
 
-use snforge_std::{declare, ContractClassTrait, DeclareResultTrait, 
-    start_cheat_caller_address,
-    stop_cheat_caller_address
+use snforge_std::{
+    declare, ContractClassTrait, DeclareResultTrait, start_cheat_caller_address,
+    stop_cheat_caller_address, start_cheat_block_timestamp, stop_cheat_block_timestamp, spy_events,
+    EventSpyAssertionsTrait
 };
 use escrownet_contract::interface::iescrow::{IEscrowDispatcher};
-
-
 
 
 fn BENEFICIARY() -> ContractAddress {
@@ -57,6 +56,7 @@ fn test_initialize_escrow() {
     let contract_address = __setup__();
 
     let escrow_contract_dispatcher = IEscrowDispatcher { contract_address };
+    let mut spy = spy_events();
 
     // setup test data
     let escrow_id: u64 = 7;
@@ -64,14 +64,17 @@ fn test_initialize_escrow() {
     let provider_address = starknet::contract_address_const::<0x124>();
     let amount: u256 = 250;
 
-    let escrow = escrow_contract_dispatcher.initialize_escrow(
-        escrow_id,
-        benefeciary_address,
-        provider_address,
-        amount
-    );
+    let depositor = DEPOSITOR();
 
+    start_cheat_caller_address(contract_address, depositor);
 
+    escrow_contract_dispatcher
+        .initialize_escrow(escrow_id, benefeciary_address, provider_address, amount);
 
+    let escrow_data = escrow_contract_dispatcher.get_escrow_details(7);
+
+    assert(escrow_data.amount == 250, 'Invalid amount');
+
+    stop_cheat_caller_address(contract_address);
 }
 
