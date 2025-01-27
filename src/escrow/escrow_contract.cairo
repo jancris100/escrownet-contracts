@@ -4,19 +4,19 @@ use starknet::{ContractAddress};
 mod EscrowContract {
     use core::num::traits::Zero;
     use starknet::{ContractAddress, storage::Map, contract_address_const};
-    use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess, StoragePathEntry,};
+    use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess, StoragePathEntry};
     use starknet::get_block_timestamp;
     use core::starknet::{get_caller_address};
+    use crate::interface::iescrow::{IEscrowContract};
     use crate::escrow::types::Escrow;
     use crate::interface::iescrow::{IEscrow};
-
 
     #[storage]
     struct Storage {
         depositor: ContractAddress,
         benefeciary: ContractAddress,
         arbiter: ContractAddress,
-        time_frame: u64,
+        time_frame: u64, // #[view]
         worth_of_asset: u256,
         client_address: ContractAddress,
         provider_address: ContractAddress,
@@ -52,17 +52,60 @@ mod EscrowContract {
         amount: u256,
         timestamp: u64,
     }
-
     #[constructor]
     fn constructor(
         ref self: ContractState,
         benefeciary: ContractAddress,
         depositor: ContractAddress,
-        arbiter: ContractAddress
+        arbiter: ContractAddress,
     ) {
         self.benefeciary.write(benefeciary);
         self.depositor.write(depositor);
         self.arbiter.write(arbiter);
+    }
+
+    #[external(v0)]
+    fn initialize_escrow(
+        ref self: ContractState,
+        escrow_id: u64,
+        beneficiary: ContractAddress,
+        provider_address: ContractAddress,
+        amount: u256,
+    ) {
+        // Additional validation for addresses
+        assert(beneficiary != contract_address_const::<'0x0'>(), 'Invalid beneficiary address');
+        assert(provider_address != contract_address_const::<'0x0'>(), 'Invalid provider address');
+        let caller = get_caller_address();
+
+        // Ensure caller is authorized (this might need adjustment based on requirements)
+        assert(caller == self.depositor.read(), 'Unauthorized caller');
+
+        // Check if escrow already exists
+        let exists = self.escrow_exists.read(escrow_id);
+        assert(!exists, 'Escrow ID already exists');
+
+        // Basic validation
+        assert(amount > 0, 'Amount must be positive');
+        assert(beneficiary != provider_address, 'Invalid addresses');
+
+        // Store escrow details
+        self.escrow_exists.write(escrow_id, true);
+        self.escrow_amounts.write(escrow_id, amount);
+        self.worth_of_asset.write(amount);
+
+        // Emit initialization event
+        self
+            .emit(
+                Event::EscrowInitialized(
+                    EscrowInitialized {
+                        escrow_id,
+                        beneficiary,
+                        provider: provider_address,
+                        amount,
+                        timestamp: get_block_timestamp(),
+                    },
+                ),
+            );
     }
 
     #[abi(embed_v0)]

@@ -37,7 +37,6 @@
 
 //     let balance_before = safe_dispatcher.get_balance().unwrap();
 //     assert(balance_before == 0, 'Invalid balance');
-
 //     match safe_dispatcher.increase_balance(0) {
 //         Result::Ok(_) => core::panic_with_felt252('Should have panicked'),
 //         Result::Err(panic_data) => {
@@ -45,3 +44,4 @@
 //         }
 //     };
 // }
+
