@@ -140,18 +140,18 @@ mod EscrowContract {
             // Ensure caller is authorized (this might need adjustment based on requirements)
             assert(caller == self.depositor.read(), 'Unauthorized caller');
 
-        // Check if escrow already exists
-        let exists = self.escrow_exists.read(escrow_id);
-        assert(!exists, 'Escrow ID already exists');
+            // Check if escrow already exists
+            let exists = self.escrow_exists.read(escrow_id);
+            assert(!exists, 'Escrow ID already exists');
 
-        // Basic validation
-        assert(amount > 0, 'Amount must be positive');
-        assert(beneficiary != provider_address, 'Invalid addresses');
+            // Basic validation
+            assert(amount > 0, 'Amount must be positive');
+            assert(beneficiary != provider_address, 'Invalid addresses');
 
-        // Store escrow details
-        self.escrow_exists.write(escrow_id, true);
-        self.escrow_amounts.write(escrow_id, amount);
-        self.worth_of_asset.write(amount);
+            // Store escrow details
+            self.escrow_exists.write(escrow_id, true);
+            self.escrow_amounts.write(escrow_id, amount);
+            self.worth_of_asset.write(amount);
 
             // Emit initialization event
             self
