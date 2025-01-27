@@ -3,11 +3,12 @@ use starknet::{ContractAddress};
 #[starknet::contract]
 mod EscrowContract {
     use core::num::traits::Zero;
-    use starknet::{ContractAddress, storage::Map};
+    use starknet::{ContractAddress, storage::Map, contract_address_const};
     use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess, StoragePathEntry,};
     use starknet::get_block_timestamp;
     use core::starknet::{get_caller_address};
     use crate::escrow::types::Escrow;
+    use crate::interface::iescrow::{IEscrow};
 
 
     #[storage]
@@ -17,9 +18,6 @@ mod EscrowContract {
         arbiter: ContractAddress,
         time_frame: u64,
         worth_of_asset: u256,
-        client_address: ContractAddress,
-        provider_address: ContractAddress,
-        balance: u256,
         client_address: ContractAddress,
         provider_address: ContractAddress,
         balance: u256,
@@ -47,7 +45,7 @@ mod EscrowContract {
 
     // New event for escrow initialization
     #[derive(Drop, starknet::Event)]
-    struct EscrowInitialized {
+    pub struct EscrowInitialized {
         escrow_id: u64,
         beneficiary: ContractAddress,
         provider: ContractAddress,
@@ -67,97 +65,80 @@ mod EscrowContract {
         self.arbiter.write(arbiter);
     }
 
+    #[abi(embed_v0)]
+    impl EscrowImpl of IEscrow<ContractState> {
+        fn get_escrow_details(ref self: ContractState, escrow_id: u256) -> Escrow {
+            // Validate if the escrow exists
+            let depositor = self.depositor.read();
+            assert(!depositor.is_zero(), 'Escrow does not exist');
 
-    fn get_escrow_details(ref self: ContractState, escrow_id: u256) -> Escrow {
-        // Validate if the escrow exists
-        let depositor = self.depositor.read();
-        assert(!depositor.is_zero(), 'Escrow does not exist');
+            let client_address = self.client_address.read();
+            let provider_address = self.provider_address.read();
+            let amount = self.worth_of_asset.read();
+            let balance = self.balance.read();
 
-        let client_address = self.client_address.read();
-        let provider_address = self.provider_address.read();
-        let amount = self.worth_of_asset.read();
-        let balance = self.balance.read();
-
-        let escrow = Escrow {
-            client_address: client_address,
-            provider_address: provider_address,
-            amount: amount,
-            balance: balance,
-        };
-        return escrow;
-    }
-
-
-    fn get_escrow_details(ref self: ContractState, escrow_id: u256) -> Escrow {
-        // Validate if the escrow exists
-        let depositor = self.depositor.read();
-        assert(!depositor.is_zero(), 'Escrow does not exist');
-
-        let client_address = self.client_address.read();
-        let provider_address = self.provider_address.read();
-        let amount = self.worth_of_asset.read();
-        let balance = self.balance.read();
-
-        let escrow = Escrow {
-            client_address: client_address,
-            provider_address: provider_address,
-            amount: amount,
-            balance: balance,
-        };
-        return escrow;
-    }
-
-
-    fn approve(ref self: ContractState, benefeciary: ContractAddress) {
-        let caller = get_caller_address();
-        // check if the address is a depositor
-        let mut address = self.depositor.read();
-        // check if address exist
-        if address != 0.try_into().unwrap() {
-            // address type is a depositor
-            address = caller
+            let escrow = Escrow {
+                client_address: client_address,
+                provider_address: provider_address,
+                amount: amount,
+                balance: balance,
+            };
+            return escrow;
         }
-        // check if address is a benificary
-        address = self.benefeciary.read();
 
-        if address != 0.try_into().unwrap() {
-            // address type is a beneficary
-            address = caller
+
+        fn approve(ref self: ContractState, benefeciary: ContractAddress) {
+            let caller = get_caller_address();
+            // check if the address is a depositor
+            let mut address = self.depositor.read();
+            // check if address exist
+            if address != 0.try_into().unwrap() {
+                // address type is a depositor
+                address = caller
+            }
+            // check if address is a benificary
+            address = self.benefeciary.read();
+
+            if address != 0.try_into().unwrap() {
+                // address type is a beneficary
+                address = caller
+            }
+            // map address to true
+            self.depositor_approve.entry(address).write(true);
+            let timestamp = get_block_timestamp();
+
+            // Emit the event
+            self
+                .emit(
+                    ApproveTransaction {
+                        depositor: address, approval: true, time_of_approval: timestamp,
+                    }
+                );
         }
-        // map address to true
-        self.depositor_approve.entry(address).write(true);
-        let timestamp = get_block_timestamp();
 
-        // Emit the event
-        self
-            .emit(
-                ApproveTransaction {
-                    depositor: address, approval: true, time_of_approval: timestamp,
-                }
+        /// Initialize a new escrow with the given parameters
+        /// # Arguments
+        /// * escrow_id - Unique identifier for the escrow
+        /// * beneficiary - Address of the beneficiary
+        /// * provider_address - Address of the service provider
+        /// * amount - Amount to be held in escrow
+
+        fn initialize_escrow(
+            ref self: ContractState,
+            escrow_id: u64,
+            beneficiary: ContractAddress,
+            provider_address: ContractAddress,
+            amount: u256
+        ) {
+            // Additional validation for addresses
+            assert(beneficiary != contract_address_const::<'0x0'>(), 'Invalid beneficiary address');
+            assert(
+                provider_address != contract_address_const::<'0x0'>(), 'Invalid provider address'
             );
-    }
+            let caller = get_caller_address();
 
-    /// Initialize a new escrow with the given parameters
-    /// # Arguments
-    /// * escrow_id - Unique identifier for the escrow
-    /// * beneficiary - Address of the beneficiary
-    /// * provider_address - Address of the service provider
-    /// * amount - Amount to be held in escrow
-    #[external(v0)]
-    fn initialize_escrow(
-        ref self: ContractState,
-        escrow_id: u64,
-        beneficiary: ContractAddress,
-        provider_address: ContractAddress,
-        amount: u256
-    ) {
-        // Additional validation for addresses
-        assert(beneficiary != contract_address_const::<'0x0'>(), 'Invalid beneficiary address');
-        assert(provider_address != contract_address_const::<'0x0'>(), 'Invalid provider address');
-        let caller = get_caller_address();
-
-        // Ensure caller is authorized (this might need adjustment based on requirements)
-        assert(caller == self.depositor.read(), 'Unauthorized caller');
+            // Ensure caller is authorized (this might need adjustment based on requirements)
+            assert(caller == self.depositor.read(), 'Unauthorized caller');
 
         // Check if escrow already exists
         let exists = self.escrow_exists.read(escrow_id);
@@ -172,18 +153,19 @@ mod EscrowContract {
         self.escrow_amounts.write(escrow_id, amount);
         self.worth_of_asset.write(amount);
 
-        // Emit initialization event
-        self
-            .emit(
-                Event::EscrowInitialized(
-                    EscrowInitialized {
-                        escrow_id,
-                        beneficiary,
-                        provider: provider_address,
-                        amount,
-                        timestamp: get_block_timestamp(),
-                    }
-                )
-            );
+            // Emit initialization event
+            self
+                .emit(
+                    Event::EscrowInitialized(
+                        EscrowInitialized {
+                            escrow_id,
+                            beneficiary,
+                            provider: provider_address,
+                            amount,
+                            timestamp: get_block_timestamp(),
+                        }
+                    )
+                );
+        }
     }
 }
