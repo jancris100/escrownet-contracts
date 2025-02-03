@@ -13,9 +13,7 @@ pub trait IEscrowFactory<TContractState> {
         salt: felt252
     ) -> ContractAddress;
 
-    fn get_escrow_contracts(
-        ref self: TContractState
-    ) -> Array<ContractAddress>;
+    fn get_escrow_contracts(ref self: TContractState) -> Array<ContractAddress>;
 }
 
 #[starknet::component]
