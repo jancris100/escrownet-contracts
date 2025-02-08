@@ -128,9 +128,13 @@ mod EscrowContract {
             amount: u256
         ) {
             // Additional validation for addresses
-            assert(beneficiary != contract_address_const::<'0x0'>(), Errors::INVALID_BENEFICIARY_ADDRESS);
             assert(
-                provider_address != contract_address_const::<'0x0'>(), Errors::INVALID_PROVIDER_ADDRESS
+                beneficiary != contract_address_const::<'0x0'>(),
+                Errors::INVALID_BENEFICIARY_ADDRESS
+            );
+            assert(
+                provider_address != contract_address_const::<'0x0'>(),
+                Errors::INVALID_PROVIDER_ADDRESS
             );
             let caller = get_caller_address();
 
