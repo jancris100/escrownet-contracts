@@ -109,7 +109,7 @@ mod EscrowContract {
                 .emit(
                     ApproveTransaction {
                         depositor: address, approval: true, time_of_approval: timestamp,
-                    }
+                    },
                 );
         }
 
@@ -125,16 +125,16 @@ mod EscrowContract {
             escrow_id: u64,
             beneficiary: ContractAddress,
             provider_address: ContractAddress,
-            amount: u256
+            amount: u256,
         ) {
             // Additional validation for addresses
             assert(
                 beneficiary != contract_address_const::<'0x0'>(),
-                Errors::INVALID_BENEFICIARY_ADDRESS
+                Errors::INVALID_BENEFICIARY_ADDRESS,
             );
             assert(
                 provider_address != contract_address_const::<'0x0'>(),
-                Errors::INVALID_PROVIDER_ADDRESS
+                Errors::INVALID_PROVIDER_ADDRESS,
             );
             let caller = get_caller_address();
 
@@ -164,13 +164,17 @@ mod EscrowContract {
                             provider: provider_address,
                             amount,
                             timestamp: get_block_timestamp(),
-                        }
-                    )
+                        },
+                    ),
                 );
         }
 
         fn get_depositor(self: @ContractState) -> ContractAddress {
             self.depositor.read()
+        }
+
+        fn get_beneficiary(self: @ContractState) -> ContractAddress {
+            self.benefeciary.read()
         }
     }
 }
