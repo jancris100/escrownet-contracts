@@ -5,7 +5,7 @@ pub struct Escrow {
     pub client_address: ContractAddress,
     pub provider_address: ContractAddress,
     pub amount: u256,
-    pub balance: u256
+    pub balance: u256,
 }
 
 #[starknet::interface]
@@ -16,6 +16,6 @@ pub trait IEscrow<TContractState> {
         escrow_id: u64,
         beneficiary: ContractAddress,
         provider_address: ContractAddress,
-        amount: u256
+        amount: u256,
     );
 }
