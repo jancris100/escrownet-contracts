@@ -7,6 +7,7 @@ mod EscrowContract {
     use core::starknet::{get_caller_address};
     use crate::escrow::{types::Escrow, errors::Errors};
     use crate::interface::iescrow::{IEscrow};
+    use escrownet_contract::interface::ierc20::{IERC20Dispatcher};
 
     #[storage]
     struct Storage {
@@ -107,12 +108,15 @@ mod EscrowContract {
 
             let deposit_time = self.deposit_time.read(escrow_id);
 
-
             let current_time = get_block_timestamp();
             assert(current_time >= deposit_time + refund_period, Errors::TIMER_NOT_EXPIRED);
 
             let amount = self.escrow_amounts.read(escrow_id);
             assert(amount > 0, Errors::INVALID_AMOUNT);
+
+            let token_address = self.client_address.read();
+            let mut erc20_dispatcher = IERC20Dispatcher { contract_address: token_address };
+            erc20_dispatcher.transfer(depositor, amount);
 
             self.balance.write(self.balance.read() - amount);
             self.escrow_exists.write(escrow_id, false);
