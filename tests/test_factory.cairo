@@ -8,6 +8,7 @@ mod tests {
     use escrownet_contract::escrow::escrow_factory::EscrowFactory;
     use escrownet_contract::escrow::escrow_factory::IEscrowFactoryDispatcher;
     use escrownet_contract::escrow::escrow_factory::IEscrowFactoryDispatcherTrait;
+    use escrownet_contract::escrow::errors::Errors;
 
     fn BENEFICIARY() -> ContractAddress {
         'beneficiary'.try_into().unwrap()
@@ -25,8 +26,8 @@ mod tests {
         'factory_owner'.try_into().unwrap()
     }
 
-    fn INITIAL_DONATION() -> ContractAddress {
-        0.try_into().unwrap()
+    fn INITIAL_DONATION() -> u256 {
+        0
     }
     // Setup corregido usando serialize y deploy con @
     fn __setup__() -> ContractAddress {
@@ -51,8 +52,7 @@ mod tests {
         let dispatcher = IEscrowFactoryDispatcher { contract_address };
 
         let escrow_address = dispatcher.deploy_escrow(BENEFICIARY(), DEPOSITOR(), ARBITER(), salt);
-        // Verificación básica
-        assert(escrow_address != INITIAL_DONATION(), "Invalid escrow address");
+        assert(escrow_address == INITIAL_DONATION(), Errors::INVALID_AMOUNT);
 
         spy
             .assert_emitted(
@@ -89,10 +89,10 @@ mod tests {
         let escrow2 = dispatcher.deploy_escrow(BENEFICIARY(), DEPOSITOR(), ARBITER(), 222_felt252);
 
         // Verificar almacenamiento
-        let deployed_contracts = dispatcher.get_escrow_contracts();
+        let deployed_contracts = dispatcher.get_escrow_contracts_factory();
         assert(deployed_contracts.len() == 2, "Should have 2 contracts");
-        assert(deployed_contracts[0] == escrow1, "Mismatch first contract");
-        assert(deployed_contracts[1] == escrow2, "Mismatch second contract");
+        assert(*deployed_contracts[0] == escrow1, "Mismatch first contract");
+        assert(*deployed_contracts[1] == escrow2, "Mismatch second contract");
 
         stop_cheat_caller_address_global();
     }

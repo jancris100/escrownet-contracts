@@ -14,6 +14,7 @@ pub trait IEscrowFactory<TContractState> {
     ) -> ContractAddress;
 
     fn get_escrow_contracts(ref self: TContractState) -> Array<ContractAddress>;
+    fn get_escrow_contracts_factory(ref self: TContractState) -> Array<ContractAddress>;
 }
 
 
@@ -43,11 +44,11 @@ pub mod EscrowFactory {
 
     #[derive(Drop, starknet::Event)]
     pub struct EscrowDeployed {
-        beneficiary: ContractAddress,
-        depositor: ContractAddress,
-        arbiter: ContractAddress,
-        escrow_address: ContractAddress,
-        salt: felt252,
+        pub beneficiary: ContractAddress,
+        pub depositor: ContractAddress,
+        pub arbiter: ContractAddress,
+        pub escrow_address: ContractAddress,
+        pub salt: felt252,
     }
 
     #[embeddable_as(Escrows)]
@@ -93,6 +94,19 @@ pub mod EscrowFactory {
         }
 
         fn get_escrow_contracts(
+            ref self: ComponentState<TContractState>,
+        ) -> Array<ContractAddress> {
+            let escrow_count = self.escrow_count.read();
+            let mut escrow_addresses: Array<ContractAddress> = array![];
+
+            for i in 1..escrow_count {
+                escrow_addresses.append(self.escrow_addresses.read(i));
+            };
+
+            escrow_addresses
+        }
+
+        fn get_escrow_contracts_factory(
             ref self: ComponentState<TContractState>,
         ) -> Array<ContractAddress> {
             let escrow_count = self.escrow_count.read();
