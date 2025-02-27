@@ -1,7 +1,10 @@
 #[cfg(test)]
 mod tests {
     use starknet::ContractAddress;
-    use snforge_std::{declare, start_cheat_caller_address_global, stop_cheat_caller_address};
+    use snforge_std::{
+        declare, ContractClassTrait, DeclareResultTrait, start_cheat_caller_address,
+        stop_cheat_caller_address, spy_events,
+    };
     use escrownet_contract::escrow::escrow_factory::IEscrowFactory;
 
     fn FACTORY_OWNER() -> ContractAddress {
@@ -23,18 +26,18 @@ mod tests {
     fn __setup__() -> ContractAddress {
         let contract = declare("EscrowFactory").unwrap();
         let class_hash = contract.class_hash();
-    
+
         let mut constructor_calldata: Array<felt252> = array![];
-    
+
         // Serialize constructor arguments
         let initial_owner: ContractAddress = FACTORY_OWNER();
         let fee: u32 = 100;
-    
+
         constructor_calldata.append(initial_owner.into()); // Convert ContractAddress to felt252
         constructor_calldata.append(fee.into()); // Convert u32 to felt252
-    
+
         let (contract_address, _) = contract.deploy(@constructor_calldata).unwrap();
-    
+
         contract_address
     }
     #[test]
