@@ -2,35 +2,36 @@
 mod tests {
     use starknet::ContractAddress;
     use snforge_std::{
-        declare, deploy_contract, start_cheat_caller_address, stop_cheat_caller_address,
+        declare, deploy_syscall, start_cheat_caller_address, stop_cheat_caller_address,
     };
-    use escrownet_contract::interface::iescrow::IEscrowFactoryDispatcher;
+    use escrownet_contract::interface::iescrow::{IEscrowFactoryDispatcher};
+    use escrownet_contract::interface::iescrow::{IEscrowDispatcher};
 
     // 📌 Direcciones de prueba
     fn FACTORY_OWNER() -> ContractAddress {
-        'factory_owner'.try_into().unwrap()
+        ContractAddress::try_from('factory_owner').unwrap()
     }
 
     fn BENEFICIARY() -> ContractAddress {
-        'beneficiary'.try_into().unwrap()
+        ContractAddress::try_from('beneficiary').unwrap()
     }
 
     fn DEPOSITOR() -> ContractAddress {
-        'depositor'.try_into().unwrap()
+        ContractAddress::try_from('depositor').unwrap()
     }
 
     fn ARBITER() -> ContractAddress {
-        'arbiter'.try_into().unwrap()
+        ContractAddress::try_from('arbiter').unwrap()
     }
 
     // 📌 Función de configuración: despliega el contrato EscrowFactory
     fn __setup__() -> ContractAddress {
-        let factory_class_hash = declare("EscrowFactory").unwrap().class_hash();
+        let factory_class = declare("EscrowFactory").unwrap();
+        let class_hash = factory_class.class_hash().unwrap(); // ✅ Corrección
 
         let constructor_calldata: Array<felt252> = array![];
-
-        let (factory_contract_address, _) = deploy_contract(
-            factory_class_hash, constructor_calldata, false
+        let (factory_contract_address, _) = deploy_syscall(
+            class_hash, 0, constructor_calldata.span(), false
         )
             .unwrap();
 
@@ -86,7 +87,7 @@ mod tests {
         let escrow_contracts = factory_dispatcher.get_escrow_contracts();
 
         // 📌 4. Verificar que los contratos han sido registrados correctamente
-        assert(escrow_contracts.len() == 2, "Should be 2 Escrow contracts");
+        assert(ArrayTrait::len(escrow_contracts) == 2, "Should be 2 Escrow contracts");
 
         stop_cheat_caller_address(factory_address);
     }
