@@ -195,13 +195,13 @@ mod EscrowContract {
             assert(depositor == caller_address, 'Only depositor can fund.');
             // Check that the correct amount was sended.
             assert(amount >= expected_amount, 'Amount is less than expected');
-            
+
             //// First Modify in-contract state to avoid reentrancy attacks
             // Set escrow to funded
             self.escrow_funded.entry(escrow_id).write(true);
-            
-            // Use the OpenZeppelin ERC20 contract to transfer the fund from the caller address to the
-            // scrow contract.
+
+            // Use the OpenZeppelin ERC20 contract to transfer the fund from the caller address to
+            // the scrow contract.
             let token = IERC20Dispatcher { contract_address: token_address };
             token.transfer_from(caller_address, contract_address, amount);
             // Emit Escrow funded Event

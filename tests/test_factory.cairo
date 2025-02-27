@@ -1,20 +1,19 @@
 #[cfg(test)]
 mod tests {
-    use starknet::{
-        ContractAddress, ClassHash, syscalls::deploy_syscall, SyscallResultTrait, storage::Map
-    };
+    use starknet::ContractAddress;
+    use starknet::syscalls::deploy_syscall;
+    use starknet::SyscallResultTrait;
+    use starknet::storage::Map;
     use core::traits::TryInto;
-    use snforge_std::{
-        declare, ContractClassTrait, DeclareResultTrait, start_cheat_caller_address,
-        stop_cheat_caller_address
-    };
+    use snforge_std::{declare, ContractClassTrait, DeclareResultTrait};
     use array::ArrayTrait;
+    use core;
 
     // Define el hash de clase del contrato Escrow (reemplaza con el valor real)
     const ESCROW_CONTRACT_CLASS_HASH: felt252 = 0x123;
 
     // Estructura para representar el estado del contrato de fábrica para las pruebas
-    #[derive(Copy, Drop, Serde, PartialEq, Eq, PartialOrd, Ord)]
+    #[derive(Copy, Drop, Serde, PartialEq, Debug)]
     struct FactoryState {
         escrow_count: u64,
         escrow_addresses: Map<u64, ContractAddress>,
