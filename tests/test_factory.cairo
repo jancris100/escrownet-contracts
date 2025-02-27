@@ -3,24 +3,27 @@ mod tests {
     use starknet::ContractAddress;
     use snforge_std::{
         declare, ContractClassTrait, start_cheat_caller_address_global, start_cheat_caller_address,
-        stop_cheat_caller_address, cheat_caller_address, CheatSpan, spy_events, EventSpyAssertionsTrait
+        stop_cheat_caller_address, cheat_caller_address, CheatSpan, spy_events,
+        EventSpyAssertionsTrait
     };
     use escrownet_contract::escrow::escrow_factory::IEscrowFactory;
 
+    use core::convert::TryFrom;
+
     fn FACTORY_OWNER() -> ContractAddress {
-        ContractAddress::new(0x123456_felt252).unwrap()
+        ContractAddress::try_from(0x123456_felt252).unwrap()
     }
 
     fn BENEFICIARY() -> ContractAddress {
-        ContractAddress::new(0xabcdef_felt252).unwrap()
+        ContractAddress::try_from(0xabcdef_felt252).unwrap()
     }
 
     fn DEPOSITOR() -> ContractAddress {
-        ContractAddress::new(0x987654_felt252).unwrap()
+        ContractAddress::try_from(0x987654_felt252).unwrap()
     }
 
     fn ARBITER() -> ContractAddress {
-        ContractAddress::new(0x555555_felt252).unwrap()
+        ContractAddress::try_from(0x555555_felt252).unwrap()
     }
 
     fn deploy_escrow_factory() -> ContractAddress {
@@ -30,11 +33,11 @@ mod tests {
         let constructor_calldata: Array<felt252> = array![];
         let (contract_address, _) = starknet::syscalls::deploy_syscall(
             class_hash, 0, constructor_calldata.span(), false
-        ).unwrap();
+        )
+            .unwrap();
 
         contract_address
     }
-
     #[test]
     fn test_deploy_escrow() {
         let escrow_factory_address = deploy_escrow_factory();
@@ -54,7 +57,6 @@ mod tests {
 
         stop_cheat_caller_address();
     }
-
     #[test]
     fn test_get_escrow_contracts() {
         let escrow_factory_address = deploy_escrow_factory();
