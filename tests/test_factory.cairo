@@ -2,12 +2,11 @@
 mod tests {
     use starknet::ContractAddress;
     use snforge_std::{
-        declare, ContractClassTrait, start_cheat_caller_address, stop_cheat_caller_address,
-        spy_events
+        declare, start_cheat_caller_address, stop_cheat_caller_address, spy_events,
+        DeclareResultTrait,
     };
     use escrownet_contract::escrow::escrow_factory::IEscrowFactory;
 
-    // Helper functions para direcciones de prueba
     fn BENEFICIARY() -> ContractAddress {
         'beneficiary'.try_into().unwrap()
     }
@@ -26,9 +25,9 @@ mod tests {
 
     // Setup corregido usando serialize y deploy con @
     fn __setup__() -> ContractAddress {
-        let escrow_class = declare("EscrowFactory").unwrap();
+        let escrow_class = declare("EscrowFactory").unwrap().contract_class();
 
-        let mut constructor_calldata = array![];
+        let mut constructor_calldata: Array<felt252> = array![];
         FACTORY_OWNER().serialize(ref constructor_calldata);
         100_u128.serialize(ref constructor_calldata);
 
