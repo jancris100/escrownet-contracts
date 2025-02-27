@@ -2,49 +2,39 @@
 mod tests {
     use starknet::ContractAddress;
     use snforge_std::{
-        declare, deploy_syscall, start_cheat_caller_address, stop_cheat_caller_address,
+        declare, deploy, start_cheat_caller_address, stop_cheat_caller_address, call_contract
     };
-
     use escrownet_contract::escrow::escrow_factory::IEscrowFactory;
 
-    // 📌 Direcciones de prueba
+    // 📌 Direcciones de prueba corregidas
     fn FACTORY_OWNER() -> ContractAddress {
-        ContractAddress::try_from('factory_owner').unwrap()
+        ContractAddress::from(0x123456_felt252)
     }
 
     fn BENEFICIARY() -> ContractAddress {
-        ContractAddress::try_from('beneficiary').unwrap()
+        ContractAddress::from(0xabcdef_felt252)
     }
 
     fn DEPOSITOR() -> ContractAddress {
-        ContractAddress::try_from('depositor').unwrap()
+        ContractAddress::from(0x987654_felt252)
     }
 
     fn ARBITER() -> ContractAddress {
-        ContractAddress::try_from('arbiter').unwrap()
+        ContractAddress::from(0x555555_felt252)
     }
 
-    // 📌 Función de configuración: despliega el contrato EscrowFactory
+    // 📌 Función de configuración corregida
     fn __setup__() -> ContractAddress {
-        let factory_class = declare("EscrowFactory").unwrap();
-        let class_hash = factory_class.class_hash().unwrap(); // ✅ Corrección
-
+        let factory_class_hash = declare("EscrowFactory").unwrap().class_hash;
         let constructor_calldata: Array<felt252> = array![];
-        let (factory_contract_address, _) = deploy_syscall(
-            class_hash, 0, constructor_calldata.span(), false
-        )
-            .unwrap();
-
+        let factory_contract_address = deploy(factory_class_hash, constructor_calldata, false).unwrap();
         factory_contract_address
     }
 
     #[test]
     fn test_deploy_escrow() {
-        // 📌 1. Desplegar EscrowFactory
         let factory_address = __setup__();
-        let factory_dispatcher = IEscrowFactoryDispatcher { contract_address: factory_address };
 
-        // 📌 2. Simular que el factory owner está llamando la función
         let factory_owner = FACTORY_OWNER();
         start_cheat_caller_address(factory_address, factory_owner);
 
@@ -53,22 +43,18 @@ mod tests {
         let arbiter = ARBITER();
         let salt: felt252 = 12345_felt252;
 
-        // 📌 3. Llamar a `deploy_escrow`
-        let escrow_address = factory_dispatcher
-            .deploy_escrow(beneficiary, depositor, arbiter, salt);
+        let escrow_address: ContractAddress = call_contract(
+            factory_address, "deploy_escrow", (beneficiary, depositor, arbiter, salt)
+        ).unwrap();
 
-        // 📌 4. Verificar que se ha desplegado correctamente
         assert(escrow_address != ContractAddress::default(), "Escrow address cannot be zero");
 
-        // 📌 5. Detener la simulación del usuario
         stop_cheat_caller_address(factory_address);
     }
 
     #[test]
     fn test_get_escrow_contracts() {
-        // 📌 1. Desplegar EscrowFactory
         let factory_address = __setup__();
-        let factory_dispatcher = IEscrowFactoryDispatcher { contract_address: factory_address };
 
         let factory_owner = FACTORY_OWNER();
         start_cheat_caller_address(factory_address, factory_owner);
@@ -79,15 +65,12 @@ mod tests {
         let salt1: felt252 = 12345_felt252;
         let salt2: felt252 = 67890_felt252;
 
-        // 📌 2. Desplegar dos contratos Escrow
-        factory_dispatcher.deploy_escrow(beneficiary, depositor, arbiter, salt1);
-        factory_dispatcher.deploy_escrow(beneficiary, depositor, arbiter, salt2);
+        call_contract(factory_address, "deploy_escrow", (beneficiary, depositor, arbiter, salt1)).unwrap();
+        call_contract(factory_address, "deploy_escrow", (beneficiary, depositor, arbiter, salt2)).unwrap();
 
-        // 📌 3. Obtener la lista de contratos
-        let escrow_contracts = factory_dispatcher.get_escrow_contracts();
+        let escrow_contracts: Array<ContractAddress> = call_contract(factory_address, "get_escrow_contracts", ()).unwrap();
 
-        // 📌 4. Verificar que los contratos han sido registrados correctamente
-        assert(ArrayTrait::len(escrow_contracts) == 2, "Should be 2 Escrow contracts");
+        assert(escrow_contracts.len() == 2, "Should be 2 Escrow contracts");
 
         stop_cheat_caller_address(factory_address);
     }
