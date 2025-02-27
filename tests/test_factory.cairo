@@ -1,11 +1,10 @@
 #[cfg(test)]
 mod tests {
-    use super::*;
+   
     use starknet::ContractAddress;
     use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, start_cheat_caller_address, stop_cheat_caller_address, spy_events };
-    use escrownet_contract::interface::iescrow::IEscrowDispatcher;
+    use escrownet_contract::escrow::escrow_factory::IEscrowFactory;
 
-    // Helper function to deploy the EscrowFactory contract
     fn deploy_escrow_factory() -> ContractAddress {
         let contract = declare("EscrowFactory");
         let (contract_address, _err) = contract
