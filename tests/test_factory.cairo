@@ -78,4 +78,6 @@ mod tests {
         assert(escrow_contracts[0] == escrow_address1, "Incorrect escrow address at index 0");
         assert(escrow_contracts[1] == escrow_address2, "Incorrect escrow address at index 1");
 
-        stop_cheat_caller_address(
+        stop_cheat_caller_address();
+    }
+}
