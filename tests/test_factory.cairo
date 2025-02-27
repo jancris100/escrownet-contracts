@@ -27,7 +27,7 @@ mod tests {
     }
 
     fn INITIAL_DONATION() -> ContractAddress {
-        ContractAddress { value: 0 } // Replace 0 with the appropriate felt252 value if needed
+        0_felt252.try_into().unwrap()
     }
     // Setup corregido usando serialize y deploy con @
     fn __setup__() -> ContractAddress {
@@ -91,8 +91,8 @@ mod tests {
         // Verificar almacenamiento
         let deployed_contracts = dispatcher.get_escrow_contracts();
         assert(deployed_contracts.len() == 2, 'Should have 2 contracts');
-        assert(*deployed_contracts[0] == escrow1, "Mismatch first contract");
-        assert(*deployed_contracts[1] == escrow2, "Mismatch second contract");
+        assert(*deployed_contracts[0] == escrow1, 'Mismatch first contract');
+        assert(*deployed_contracts[1] == escrow2, 'Mismatch second contract');
 
         stop_cheat_caller_address_global();
     }
