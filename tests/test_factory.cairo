@@ -28,12 +28,12 @@ mod tests {
         let escrow_class = declare("EscrowFactory").unwrap().contract_class();
 
         let mut constructor_calldata: Array<felt252> = array![];
-        FACTORY_OWNER().serialize(ref constructor_calldata);
+        let factory_owner = FACTORY_OWNER();
+        factory_owner.serialize(ref constructor_calldata);
         100_u128.serialize(ref constructor_calldata);
 
         let (contract_address, _) = escrow_class.deploy(@constructor_calldata).unwrap();
-
-        contract_address
+        return (contract_address);
     }
     #[test]
     #[available_gas(3000000)]
