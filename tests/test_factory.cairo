@@ -4,8 +4,8 @@ mod tests {
     use snforge_std::{
         declare, deploy_syscall, start_cheat_caller_address, stop_cheat_caller_address,
     };
-    use escrownet_contract::interface::iescrow::{IEscrowFactoryDispatcher};
-    use escrownet_contract::interface::iescrow::{IEscrowDispatcher};
+
+    use escrownet_contract::escrow::escrow_factory::IEscrowFactory;
 
     // 📌 Direcciones de prueba
     fn FACTORY_OWNER() -> ContractAddress {
