@@ -1,77 +1,73 @@
 #[cfg(test)]
 mod tests {
+    use super::*;
     use starknet::ContractAddress;
-    use snforge_std::{
-        declare, deploy, start_cheat_caller_address, stop_cheat_caller_address, call_contract
-    };
-    use escrownet_contract::escrow::escrow_factory::IEscrowFactory;
+    use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, start_cheat_caller_address, stop_cheat_caller_address, spy_events };
+    use escrownet_contract::interface::iescrow::IEscrowDispatcher;
 
-    // 📌 Direcciones de prueba corregidas
-    fn FACTORY_OWNER() -> ContractAddress {
-        ContractAddress::from(0x123456_felt252)
+    // Helper function to deploy the EscrowFactory contract
+    fn deploy_escrow_factory() -> ContractAddress {
+        let contract = declare("EscrowFactory");
+        let (contract_address, _err) = contract
+            .unwrap()
+            .contract_class()
+            .deploy(@array![])
+            .unwrap();
+
+        contract_address
     }
 
-    fn BENEFICIARY() -> ContractAddress {
-        ContractAddress::from(0xabcdef_felt252)
-    }
-
-    fn DEPOSITOR() -> ContractAddress {
-        ContractAddress::from(0x987654_felt252)
-    }
-
-    fn ARBITER() -> ContractAddress {
-        ContractAddress::from(0x555555_felt252)
-    }
-
-    // 📌 Función de configuración corregida
-    fn __setup__() -> ContractAddress {
-        let factory_class_hash = declare("EscrowFactory").unwrap().class_hash;
-        let constructor_calldata: Array<felt252> = array![];
-        let factory_contract_address = deploy(factory_class_hash, constructor_calldata, false).unwrap();
-        factory_contract_address
-    }
-
+    // Test for deploying an escrow contract
     #[test]
     fn test_deploy_escrow() {
-        let factory_address = __setup__();
+        // Deploy the EscrowFactory
+        let escrow_factory_address = deploy_escrow_factory();
 
-        let factory_owner = FACTORY_OWNER();
-        start_cheat_caller_address(factory_address, factory_owner);
+        // Prepare test addresses
+        let beneficiary: ContractAddress = 123_u128.try_into().unwrap();
+        let depositor: ContractAddress = 456_u128.try_into().unwrap();
+        let arbiter: ContractAddress = 789_u128.try_into().unwrap();
+        let salt: felt252 = 10_felt252;
 
-        let beneficiary = BENEFICIARY();
-        let depositor = DEPOSITOR();
-        let arbiter = ARBITER();
-        let salt: felt252 = 12345_felt252;
+        // Get the dispatcher
+        let dispatcher = IEscrowFactoryDispatcher { contract_address: escrow_factory_address };
 
-        let escrow_address: ContractAddress = call_contract(
-            factory_address, "deploy_escrow", (beneficiary, depositor, arbiter, salt)
-        ).unwrap();
+        // Deploy an escrow contract
+        let escrow_address = dispatcher
+            .deploy_escrow(beneficiary, depositor, arbiter, salt);
 
-        assert(escrow_address != ContractAddress::default(), "Escrow address cannot be zero");
-
-        stop_cheat_caller_address(factory_address);
+        // Assert that the escrow address is not zero
+        assert(escrow_address != ContractAddress::default(), 'Escrow address should not be zero');
     }
 
     #[test]
     fn test_get_escrow_contracts() {
-        let factory_address = __setup__();
+        // Deploy the EscrowFactory
+        let escrow_factory_address = deploy_escrow_factory();
 
-        let factory_owner = FACTORY_OWNER();
-        start_cheat_caller_address(factory_address, factory_owner);
+        // Prepare test addresses
+        let beneficiary: ContractAddress = 123_u128.try_into().unwrap();
+        let depositor: ContractAddress = 456_u128.try_into().unwrap();
+        let arbiter: ContractAddress = 789_u128.try_into().unwrap();
+        let salt: felt252 = 10_felt252;
 
-        let beneficiary = BENEFICIARY();
-        let depositor = DEPOSITOR();
-        let arbiter = ARBITER();
-        let salt1: felt252 = 12345_felt252;
-        let salt2: felt252 = 67890_felt252;
+          // Get the dispatcher
+        let dispatcher = IEscrowFactoryDispatcher { contract_address: escrow_factory_address };
 
-        call_contract(factory_address, "deploy_escrow", (beneficiary, depositor, arbiter, salt1)).unwrap();
-        call_contract(factory_address, "deploy_escrow", (beneficiary, depositor, arbiter, salt2)).unwrap();
+        // Deploy two escrow contracts
+        let escrow_address1 = dispatcher
+            .deploy_escrow(beneficiary, depositor, arbiter, salt);
+        let escrow_address2 = dispatcher
+            .deploy_escrow(beneficiary, depositor, arbiter, salt + 1_felt252);
 
-        let escrow_contracts: Array<ContractAddress> = call_contract(factory_address, "get_escrow_contracts", ()).unwrap();
+        // Retrieve the escrow contract addresses
+        let escrow_contracts = dispatcher.get_escrow_contracts();
 
-        assert(escrow_contracts.len() == 2, "Should be 2 Escrow contracts");
+        // Assert that the length of the array is 2
+        assert(escrow_contracts.len() == 2, 'Incorrect number of escrow contracts');
 
-        stop_cheat_caller_address(factory_address);
+        // Assert that the addresses are correct
+        assert(escrow_contracts<a href="undefined" target="_blank" className="bg-light-secondary dark:bg-dark-secondary px-1 rounded ml-1 no-underline text-xs text-black/70 dark:text-white/70 relative">0</a> == escrow_address1, 'Incorrect escrow address at index 0');
+        assert(escrow_contracts<a href="https://foundry-rs.github.io/starknet-foundry/testing/testing.html#writing-tests" target="_blank" className="bg-light-secondary dark:bg-dark-secondary px-1 rounded ml-1 no-underline text-xs text-black/70 dark:text-white/70 relative">1</a> == escrow_address2, 'Incorrect escrow address at index 1');
     }
 }
