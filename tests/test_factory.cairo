@@ -1,10 +1,7 @@
 #[cfg(test)]
 mod tests {
     use starknet::ContractAddress;
-    use snforge_std::{
-        declare, ContractClassTrait, start_cheat_caller_address_global, start_cheat_caller_address,
-        stop_cheat_caller_address, cheat_caller_address, CheatSpan, spy_events, EventSpyAssertionsTrait
-    };
+    use snforge_std::{declare, start_cheat_caller_address_global, stop_cheat_caller_address};
     use escrownet_contract::escrow::escrow_factory::IEscrowFactory;
 
     fn FACTORY_OWNER() -> ContractAddress {
@@ -23,20 +20,26 @@ mod tests {
         'arbiter'.try_into().unwrap()
     }
 
-    fn deploy_escrow_factory() -> ContractAddress {
+    fn __setup__() -> ContractAddress {
         let contract = declare("EscrowFactory").unwrap();
         let class_hash = contract.class_hash();
-
-        let constructor_calldata: Array<felt252> = array![];
-        let (contract_address, _) = starknet::syscalls::deploy_syscall(
-            class_hash, 0, constructor_calldata.span(), false
-        ).unwrap();
-
+    
+        let mut constructor_calldata: Array<felt252> = array![];
+    
+        // Serialize constructor arguments
+        let initial_owner: ContractAddress = FACTORY_OWNER();
+        let fee: u32 = 100;
+    
+        constructor_calldata.append(initial_owner.into()); // Convert ContractAddress to felt252
+        constructor_calldata.append(fee.into()); // Convert u32 to felt252
+    
+        let (contract_address, _) = contract.deploy(@constructor_calldata).unwrap();
+    
         contract_address
     }
     #[test]
     fn test_deploy_escrow() {
-        let escrow_factory_address = deploy_escrow_factory();
+        let escrow_factory_address = __setup__();
 
         let beneficiary = BENEFICIARY();
         let depositor = DEPOSITOR();
@@ -55,7 +58,7 @@ mod tests {
     }
     #[test]
     fn test_get_escrow_contracts() {
-        let escrow_factory_address = deploy_escrow_factory();
+        let escrow_factory_address = __setup__();
 
         let beneficiary = BENEFICIARY();
         let depositor = DEPOSITOR();
