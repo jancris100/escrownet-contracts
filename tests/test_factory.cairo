@@ -3,7 +3,7 @@ mod tests {
     use starknet::ContractAddress;
     use snforge_std::{
         declare, ContractClassTrait, DeclareResultTrait, start_cheat_caller_address,
-        stop_cheat_caller_address, spy_events,
+        stop_cheat_caller_address, spy_events, get_class_hash
     };
     use escrownet_contract::escrow::escrow_factory::IEscrowFactory;
 
