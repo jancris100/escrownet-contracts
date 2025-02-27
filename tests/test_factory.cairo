@@ -26,8 +26,8 @@ mod tests {
         'factory_owner'.try_into().unwrap()
     }
 
-    fn INITIAL_DONATION() -> u256 {
-        0
+    fn INITIAL_DONATION() -> ContractAddress {
+        ContractAddress { value: 0 } // Replace 0 with the appropriate felt252 value if needed
     }
     // Setup corregido usando serialize y deploy con @
     fn __setup__() -> ContractAddress {
@@ -89,8 +89,8 @@ mod tests {
         let escrow2 = dispatcher.deploy_escrow(BENEFICIARY(), DEPOSITOR(), ARBITER(), 222_felt252);
 
         // Verificar almacenamiento
-        let deployed_contracts = dispatcher.get_escrow_contracts_factory();
-        assert(deployed_contracts.len() == 2, "Should have 2 contracts");
+        let deployed_contracts = dispatcher.get_escrow_contracts();
+        assert(deployed_contracts.len() == 2, 'Should have 2 contracts');
         assert(*deployed_contracts[0] == escrow1, "Mismatch first contract");
         assert(*deployed_contracts[1] == escrow2, "Mismatch second contract");
 
