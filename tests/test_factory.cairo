@@ -3,47 +3,58 @@ mod tests {
     use starknet::ContractAddress;
     use snforge_std::{
         declare, ContractClassTrait, start_cheat_caller_address, stop_cheat_caller_address,
-        spy_events, get_class_hash
+        spy_events
     };
     use escrownet_contract::escrow::escrow_factory::IEscrowFactory;
 
-    // Constantes mejoradas usando felt252! macro
-    const FACTORY_OWNER: ContractAddress = 12345.try_into().unwrap();
-    const BENEFICIARY: ContractAddress = 67890.try_into().unwrap();
-    const DEPOSITOR: ContractAddress = 54321.try_into().unwrap();
-    const ARBITER: ContractAddress = 98765.try_into().unwrap();
+    // Helper functions para direcciones de prueba
+    fn BENEFICIARY() -> ContractAddress {
+        'beneficiary'.try_into().unwrap()
+    }
 
-    fn setup() -> ContractAddress {
-        let contract = declare("EscrowFactory").unwrap();
-        let class_hash = get_class_hash("EscrowFactory");
+    fn DEPOSITOR() -> ContractAddress {
+        'depositor'.try_into().unwrap()
+    }
 
-        let mut constructor_calldata = array![
-            FACTORY_OWNER.into(), // Conversión directa a felt252
-            100_u128.into() // Usar u128 para el fee
-        ];
+    fn ARBITER() -> ContractAddress {
+        'arbiter'.try_into().unwrap()
+    }
 
-        let (contract_address, _) = contract.deploy(constructor_calldata.span()).unwrap();
+    fn FACTORY_OWNER() -> ContractAddress {
+        'factory_owner'.try_into().unwrap()
+    }
+
+    // Setup corregido usando serialize y deploy con @
+    fn __setup__() -> ContractAddress {
+        let escrow_class = declare("EscrowFactory").unwrap();
+
+        let mut constructor_calldata = array![];
+        FACTORY_OWNER().serialize(ref constructor_calldata);
+        100_u128.serialize(ref constructor_calldata);
+
+        let (contract_address, _) = escrow_class.deploy(@constructor_calldata).unwrap();
 
         contract_address
     }
-
     #[test]
-    #[available_gas(1000000)]
+    #[available_gas(3000000)]
     fn test_deploy_escrow() {
-        let escrow_factory = setup();
-        let salt: felt252 = 10_felt252;
+        let factory_address = __setup__();
+        let salt: felt252 = 12345_felt252;
 
-        // Mockeamos el caller
-        start_cheat_caller_address(FACTORY_OWNER);
-        let dispatcher = IEscrowFactory { contract_address: escrow_factory };
+        // Mockeamos el caller como factory owner
+        start_cheat_caller_address(FACTORY_OWNER());
 
-        let escrow_address = dispatcher.deploy_escrow(BENEFICIARY, DEPOSITOR, ARBITER, salt);
+        let dispatcher = IEscrowFactory { contract_address: factory_address };
+
+        // Deploy nuevo Escrow
+        let escrow_address = dispatcher.deploy_escrow(BENEFICIARY(), DEPOSITOR(), ARBITER(), salt);
 
         // Verificación básica
         assert(escrow_address != ContractAddress::default(), "Invalid escrow address");
 
         // Verificación de evento
-        let mut spy = spy_events(escrow_factory);
+        let mut spy = spy_events(factory_address);
         spy
             .assert_emitted(
                 spy
@@ -51,33 +62,34 @@ mod tests {
                     .with_data(
                         array![
                             escrow_address.into(),
-                            BENEFICIARY.into(),
-                            DEPOSITOR.into(),
-                            ARBITER.into()
+                            BENEFICIARY().into(),
+                            DEPOSITOR().into(),
+                            ARBITER().into()
                         ]
                     )
             );
 
         stop_cheat_caller_address();
     }
-
     #[test]
-    #[available_gas(2000000)] // Más gas para múltiples operaciones
+    #[available_gas(5000000)]
     fn test_get_escrow_contracts() {
-        let escrow_factory = setup();
+        let factory_address = __setup__();
 
-        start_cheat_caller_address(FACTORY_OWNER);
-        let dispatcher = IEscrowFactory { contract_address: escrow_factory };
+        start_cheat_caller_address(FACTORY_OWNER());
+        let dispatcher = IEscrowFactory { contract_address: factory_address };
 
-        // Despliegues múltiples
-        let escrow1 = dispatcher.deploy_escrow(BENEFICIARY, DEPOSITOR, ARBITER, 10);
-        let escrow2 = dispatcher.deploy_escrow(BENEFICIARY, DEPOSITOR, ARBITER, 20);
+        // Primer deploy
+        let escrow1 = dispatcher.deploy_escrow(BENEFICIARY(), DEPOSITOR(), ARBITER(), 111_felt252);
 
-        // Verificación de almacenamiento
-        let contracts = dispatcher.get_escrow_contracts();
-        assert(contracts.len() == 2, "Should have 2 contracts");
-        assert(contracts.at(0) == escrow1, "First contract mismatch");
-        assert(contracts.at(1) == escrow2, "Second contract mismatch");
+        // Segundo deploy
+        let escrow2 = dispatcher.deploy_escrow(BENEFICIARY(), DEPOSITOR(), ARBITER(), 222_felt252);
+
+        // Verificar almacenamiento
+        let deployed_contracts = dispatcher.get_escrow_contracts();
+        assert(deployed_contracts.len() == 2, "Should have 2 contracts");
+        assert(deployed_contracts[0] == escrow1, "Mismatch first contract");
+        assert(deployed_contracts[1] == escrow2, "Mismatch second contract");
 
         stop_cheat_caller_address();
     }
