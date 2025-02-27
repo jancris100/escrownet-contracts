@@ -16,7 +16,9 @@ pub trait IEscrowFactory<TContractState> {
     fn get_escrow_contracts(ref self: TContractState) -> Array<ContractAddress>;
 }
 
+
 #[starknet::component]
+#[abi(embed_v0)]
 pub mod EscrowFactory {
     use super::IEscrowFactory;
     use starknet::{
@@ -31,6 +33,21 @@ pub mod EscrowFactory {
     struct Storage {
         escrow_count: u64,
         escrow_addresses: Map<u64, ContractAddress>,
+    }
+
+    #[event]
+    #[derive(Drop, starknet::Event)]
+    pub enum Event {
+        EscrowDeployed: EscrowDeployed
+    }
+
+    #[derive(Drop, starknet::Event)]
+    pub struct EscrowDeployed {
+        beneficiary: ContractAddress,
+        depositor: ContractAddress,
+        arbiter: ContractAddress,
+        escrow_address: ContractAddress,
+        salt: felt252,
     }
 
     #[embeddable_as(Escrows)]
@@ -58,6 +75,19 @@ pub mod EscrowFactory {
             // Update storage with the new Escrow instance
             self.escrow_addresses.write(escrow_id, escrow_address);
             self.escrow_count.write(escrow_id);
+
+            self
+                .emit(
+                    Event::EscrowDeployed(
+                        EscrowDeployed {
+                            beneficiary: beneficiary,
+                            depositor: depositor,
+                            arbiter: arbiter,
+                            escrow_address: escrow_address,
+                            salt: salt,
+                        }
+                    )
+                );
 
             escrow_address
         }

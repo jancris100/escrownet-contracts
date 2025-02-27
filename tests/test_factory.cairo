@@ -1,11 +1,13 @@
 #[cfg(test)]
 mod tests {
-    use starknet::ContractAddress;
+    use starknet::{ContractAddress};
     use snforge_std::{
-        declare, start_cheat_caller_address, stop_cheat_caller_address, spy_events,
-        DeclareResultTrait,ContractClassTrait,
+        declare, spy_events, DeclareResultTrait, ContractClassTrait,
+        start_cheat_caller_address_global, stop_cheat_caller_address_global, EventSpyAssertionsTrait
     };
-    use escrownet_contract::escrow::escrow_factory::IEscrowFactory;
+    use escrownet_contract::escrow::escrow_factory::EscrowFactory;
+    use escrownet_contract::escrow::escrow_factory::IEscrowFactoryDispatcher;
+    use escrownet_contract::escrow::escrow_factory::IEscrowFactoryDispatcherTrait;
 
     fn BENEFICIARY() -> ContractAddress {
         'beneficiary'.try_into().unwrap()
@@ -23,6 +25,9 @@ mod tests {
         'factory_owner'.try_into().unwrap()
     }
 
+    fn INITIAL_DONATION() -> ContractAddress {
+        0.try_into().unwrap()
+    }
     // Setup corregido usando serialize y deploy con @
     fn __setup__() -> ContractAddress {
         let escrow_class = declare("EscrowFactory").unwrap().contract_class();
@@ -35,48 +40,47 @@ mod tests {
         let (contract_address, _) = escrow_class.deploy(@constructor_calldata).unwrap();
         return (contract_address);
     }
+
     #[test]
     #[available_gas(3000000)]
     fn test_deploy_escrow() {
-        let factory_address = __setup__();
-        let salt: felt252 = 12345_felt252;
+        let contract_address = __setup__();
+        let mut spy = spy_events();
+        let mut salt: felt252 = 12345_felt252;
+        start_cheat_caller_address_global(FACTORY_OWNER());
+        let dispatcher = IEscrowFactoryDispatcher { contract_address };
 
-        // Mockeamos el caller como factory owner
-        start_cheat_caller_address(FACTORY_OWNER());
-
-        let dispatcher = IEscrowFactory { contract_address: factory_address };
-
-        // Deploy nuevo Escrow
         let escrow_address = dispatcher.deploy_escrow(BENEFICIARY(), DEPOSITOR(), ARBITER(), salt);
-
         // Verificación básica
-        assert(escrow_address != ContractAddress::default(), "Invalid escrow address");
+        assert(escrow_address != INITIAL_DONATION(), "Invalid escrow address");
 
-        // Verificación de evento
-        let mut spy = spy_events(factory_address);
         spy
             .assert_emitted(
-                spy
-                    .event("EscrowDeployed")
-                    .with_data(
-                        array![
-                            escrow_address.into(),
-                            BENEFICIARY().into(),
-                            DEPOSITOR().into(),
-                            ARBITER().into()
-                        ]
+                @array![
+                    (
+                        contract_address,
+                        EscrowFactory::Event::EscrowDeployed(
+                            EscrowFactory::EscrowDeployed {
+                                beneficiary: BENEFICIARY(),
+                                depositor: DEPOSITOR(),
+                                arbiter: ARBITER(),
+                                escrow_address: escrow_address,
+                                salt: salt,
+                            }
+                        )
                     )
+                ]
             );
 
-        stop_cheat_caller_address();
+        stop_cheat_caller_address_global();
     }
+
     #[test]
     #[available_gas(5000000)]
     fn test_get_escrow_contracts() {
-        let factory_address = __setup__();
-
-        start_cheat_caller_address(FACTORY_OWNER());
-        let dispatcher = IEscrowFactory { contract_address: factory_address };
+        let contract_address = __setup__();
+        start_cheat_caller_address_global(FACTORY_OWNER());
+        let dispatcher = IEscrowFactoryDispatcher { contract_address };
 
         // Primer deploy
         let escrow1 = dispatcher.deploy_escrow(BENEFICIARY(), DEPOSITOR(), ARBITER(), 111_felt252);
@@ -90,6 +94,6 @@ mod tests {
         assert(deployed_contracts[0] == escrow1, "Mismatch first contract");
         assert(deployed_contracts[1] == escrow2, "Mismatch second contract");
 
-        stop_cheat_caller_address();
+        stop_cheat_caller_address_global();
     }
 }
