@@ -104,7 +104,5 @@ pub mod EscrowFactory {
 
             escrow_addresses
         }
-
-        
     }
 }
