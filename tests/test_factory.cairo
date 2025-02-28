@@ -29,18 +29,14 @@ mod tests {
     fn INITIAL_CONTRACT() -> ContractAddress {
         0_felt252.try_into().unwrap()
     }
-    // Setup corregido usando serialize y deploy con @
+    
     fn __setup__() -> ContractAddress {
         let escrow_class = declare("EscrowFactory").unwrap().contract_class();
-
-        let mut constructor_calldata: Array<felt252> = array![];
-        let factory_owner = FACTORY_OWNER();
-        factory_owner.serialize(ref constructor_calldata);
-        100_u128.serialize(ref constructor_calldata);
-
-        let (contract_address, _) = escrow_class.deploy(@constructor_calldata).unwrap();
+        let (contract_address, _) = escrow_class.deploy(@array![]).unwrap();
         return (contract_address);
     }
+
+    
 
     #[test]
     #[available_gas(3000000)]
