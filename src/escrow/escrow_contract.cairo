@@ -72,7 +72,7 @@ mod EscrowContract {
         amount: u256,
         timestamp: u64,
     }
-    
+
 
     #[derive(Drop, starknet::Event)]
     pub struct EscrowFunded {
@@ -148,12 +148,14 @@ mod EscrowContract {
             self.escrow_exists.write(escrow_id, false);
             self.escrow_amounts.write(escrow_id, 0);
 
-            self.emit(Event::EscrowRefunded(EscrowRefunded {
-                escrow_id,
-                depositor,
-                amount,
-                timestamp: get_block_timestamp(),
-            }));
+            self
+                .emit(
+                    Event::EscrowRefunded(
+                        EscrowRefunded {
+                            escrow_id, depositor, amount, timestamp: get_block_timestamp(),
+                        }
+                    )
+                );
         }
 
         // Function for depositor to approve a specific escrow
