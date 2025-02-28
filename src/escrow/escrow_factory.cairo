@@ -16,16 +16,15 @@ pub trait IEscrowFactory<TContractState> {
     fn get_escrow_contracts(ref self: TContractState) -> Array<ContractAddress>;
 }
 
-
 #[starknet::contract]
-#[abi(embed_v0)]
 pub mod EscrowFactory {
     use super::IEscrowFactory;
     use starknet::{
         ContractAddress, class_hash::ClassHash, syscalls::deploy_syscall, SyscallResultTrait,
-        storage::{Map},
+        storage::{Map, StoragePathEntry},
     };
     use core::traits::{TryInto, Into};
+    use core::starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
 
     const ESCROW_CONTRACT_CLASS_HASH: felt252 = 0x123;
 
@@ -50,12 +49,10 @@ pub mod EscrowFactory {
         pub salt: felt252,
     }
 
-    #[embeddable_as(Escrows)]
-    impl EscrowFactoryImpl<
-        TContractState, +HasComponent<TContractState>,
-    > of IEscrowFactory<ComponentState<TContractState>> {
+    #[abi(embed_v0)]
+    impl EscrowFactoryImpl of super::IEscrowFactory<ContractState> {
         fn deploy_escrow(
-            ref self: ComponentState<TContractState>,
+            ref self: ContractState,
             beneficiary: ContractAddress,
             depositor: ContractAddress,
             arbiter: ContractAddress,
@@ -63,7 +60,7 @@ pub mod EscrowFactory {
         ) -> ContractAddress {
             let escrow_id = self.escrow_count.read() + 1;
 
-            let mut constructor_calldata: Array = array![
+            let mut constructor_calldata: Array<felt252> = array![
                 beneficiary.into(), depositor.into(), arbiter.into(),
             ];
 
@@ -92,14 +89,17 @@ pub mod EscrowFactory {
             escrow_address
         }
 
-        fn get_escrow_contracts(
-            ref self: ComponentState<TContractState>,
-        ) -> Array<ContractAddress> {
+        fn get_escrow_contracts(ref self: ContractState,) -> Array<ContractAddress> {
             let escrow_count = self.escrow_count.read();
             let mut escrow_addresses: Array<ContractAddress> = array![];
 
-            for i in 1..escrow_count {
+            let mut i: u64 = 1;
+            loop {
+                if i > escrow_count {
+                    break;
+                }
                 escrow_addresses.append(self.escrow_addresses.read(i));
+                i += 1;
             };
 
             escrow_addresses
