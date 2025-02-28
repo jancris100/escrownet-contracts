@@ -25,6 +25,7 @@ mod EscrowContract {
         escrow_exists: Map::<u64, bool>,
         // Store escrow amounts
         escrow_amounts: Map::<u64, u256>,
+        deposit_time: Map::<u64, u64>,
         // Track the funded escrows. Start as false and is setted to true when successfully funds.
         escrow_funded: Map::<u64, bool>,
     }
@@ -36,6 +37,7 @@ mod EscrowContract {
         ArbiterApproved: ArbiterApproved,
         EscrowInitialized: EscrowInitialized,
         EscrowFunded: EscrowFunded,
+        EscrowRefunded: EscrowRefunded,
         FundsReleased: FundsReleased,
     }
 
@@ -62,6 +64,15 @@ mod EscrowContract {
         amount: u256,
         timestamp: u64,
     }
+
+    #[derive(Drop, starknet::Event)]
+    pub struct EscrowRefunded {
+        escrow_id: u64,
+        depositor: ContractAddress,
+        amount: u256,
+        timestamp: u64,
+    }
+
 
     #[derive(Drop, starknet::Event)]
     pub struct EscrowFunded {
@@ -115,6 +126,43 @@ mod EscrowContract {
                 balance: balance,
             };
             return escrow;
+        }
+
+        fn refundTimer(ref self: ContractState, escrow_id: u64, refund_period: u64) {
+            let caller = get_caller_address();
+            let depositor = self.depositor.read();
+            assert(caller == depositor, Errors::UNAUTHORIZED_CALLER);
+
+            let exists = self.escrow_exists.read(escrow_id);
+            assert(exists, Errors::ESCROW_NOT_FOUND);
+
+            let approved = self.arbiter_approve.read(depositor);
+            assert(!approved, Errors::ALREADY_APPROVED);
+
+            let deposit_time = self.deposit_time.read(escrow_id);
+
+            let current_time = get_block_timestamp();
+            assert(current_time >= deposit_time + refund_period, Errors::TIMER_NOT_EXPIRED);
+
+            let amount = self.escrow_amounts.read(escrow_id);
+            assert(amount > 0, Errors::INVALID_AMOUNT);
+
+            let token_address = self.client_address.read();
+            let mut erc20_dispatcher = IERC20Dispatcher { contract_address: token_address };
+            erc20_dispatcher.transfer(depositor, amount);
+
+            self.balance.write(self.balance.read() - amount);
+            self.escrow_exists.write(escrow_id, false);
+            self.escrow_amounts.write(escrow_id, 0);
+
+            self
+                .emit(
+                    Event::EscrowRefunded(
+                        EscrowRefunded {
+                            escrow_id, depositor, amount, timestamp: get_block_timestamp(),
+                        }
+                    )
+                );
         }
 
         // Function for depositor to approve a specific escrow
