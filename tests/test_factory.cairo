@@ -29,19 +29,23 @@ mod tests {
     fn INITIAL_CONTRACT() -> ContractAddress {
         0_felt252.try_into().unwrap()
     }
-    
-    fn __setup__() -> ContractAddress {
-        let escrow_class = declare("EscrowFactory").unwrap().contract_class();
-        let (contract_address, _) = escrow_class.deploy(@array![]).unwrap();
-        return (contract_address);
+    // Setup corregido usando serialize y deploy con @
+    fn __setup__() -> (ContractAddress, felt252) {
+        // Declare Escrow contract
+        let escrow_class = declare("EscrowContract").unwrap();
+        let escrow_class_hash = escrow_class.class_hash;
+
+        // Deploy EscrowFactory
+        let escrow_factory_class = declare("EscrowFactory").unwrap().contract_class();
+        let (contract_address, _) = escrow_factory_class.deploy(@array![]).unwrap();
+        return (contract_address, escrow_class_hash);
     }
 
-    
 
     #[test]
     #[available_gas(3000000)]
     fn test_deploy_escrow() {
-        let contract_address = __setup__();
+        let (contract_address, escrow_class_hash) = __setup__();
         let mut spy = spy_events();
         let mut salt: felt252 = 12345_felt252;
         start_cheat_caller_address_global(FACTORY_OWNER());
@@ -74,7 +78,7 @@ mod tests {
     #[test]
     #[available_gas(5000000)]
     fn test_get_escrow_contracts() {
-        let contract_address = __setup__();
+        let (contract_address, escrow_class_hash) = __setup__();
         start_cheat_caller_address_global(FACTORY_OWNER());
         let dispatcher = IEscrowFactoryDispatcher { contract_address };
 

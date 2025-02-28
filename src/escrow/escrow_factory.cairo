@@ -32,6 +32,7 @@ pub mod EscrowFactory {
     struct Storage {
         escrow_count: u64,
         escrow_addresses: Map<u64, ContractAddress>,
+        escrow_class_hash: ClassHash,
     }
 
     #[event]
