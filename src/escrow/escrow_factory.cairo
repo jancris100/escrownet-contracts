@@ -17,7 +17,7 @@ pub trait IEscrowFactory<TContractState> {
 }
 
 
-#[starknet::component]
+#[starknet::contract]
 #[abi(embed_v0)]
 pub mod EscrowFactory {
     use super::IEscrowFactory;
