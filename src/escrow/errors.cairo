@@ -8,4 +8,8 @@ pub mod Errors {
     pub const INVALID_ADDRESSES: felt252 = 'Provider cannot be beneficiary';
     pub const ALREADY_APPROVED: felt252 = 'Already approved';
     pub const TIMER_NOT_EXPIRED: felt252 = 'timer not expired';
+    pub const ARBITER_NOT_APPROVED: felt252 = 'Arbiter not approved';
+    pub const DEPOSITOR_NOT_APPROVED: felt252 = 'Depositor not approved';
+    pub const INSUFFICIENT_BALANCE: felt252 = 'Insufficient Balance';
+    pub const ESCROW_NOT_FUNDED: felt252 = 'Escrow is not funded';
 }
