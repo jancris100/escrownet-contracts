@@ -71,6 +71,13 @@ mod EscrowContract {
     }
 
     #[derive(Drop, starknet::Event)]
+    pub struct RefundEscrow {
+        depositor: ContractAddress,
+        amount: u256,
+        escrow_address: ContractAddress,
+    }
+
+    #[derive(Drop, starknet::Event)]
     pub struct FundsReleased {
         escrow_id: u64,
         beneficiary: ContractAddress,
