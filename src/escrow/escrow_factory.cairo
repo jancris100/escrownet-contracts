@@ -50,6 +50,11 @@ pub mod EscrowFactory {
         pub salt: felt252,
     }
 
+    #[constructor]
+    fn constructor(ref self: ContractState, escrow_class_hash: ClassHash) {
+        self.escrow_class_hash.write(escrow_class_hash);
+    }
+
     #[abi(embed_v0)]
     impl EscrowFactoryImpl of super::IEscrowFactory<ContractState> {
         fn deploy_escrow(
@@ -65,30 +70,26 @@ pub mod EscrowFactory {
                 beneficiary.into(), depositor.into(), arbiter.into(),
             ];
 
-            // Deploy the Escrow contract
-            let class_hash: ClassHash = ESCROW_CONTRACT_CLASS_HASH.try_into().unwrap();
+            let class_hash: ClassHash = self.escrow_class_hash.read();
+
             let result = deploy_syscall(class_hash, salt, constructor_calldata.span(), true);
             let (escrow_address, _) = result.unwrap_syscall();
 
-            // Update storage with the new Escrow instance
+            // Guardar dirección del nuevo contrato
             self.escrow_addresses.write(escrow_id, escrow_address);
             self.escrow_count.write(escrow_id);
 
+            // Emitir evento
             self
                 .emit(
                     Event::EscrowDeployed(
-                        EscrowDeployed {
-                            beneficiary: beneficiary,
-                            depositor: depositor,
-                            arbiter: arbiter,
-                            escrow_address: escrow_address,
-                            salt: salt,
-                        }
+                        EscrowDeployed { beneficiary, depositor, arbiter, escrow_address, salt, }
                     )
                 );
 
             escrow_address
         }
+
 
         fn get_escrow_contracts(ref self: ContractState,) -> Array<ContractAddress> {
             let escrow_count = self.escrow_count.read();
