@@ -1,5 +1,8 @@
 use starknet::ContractAddress;
-use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, start_cheat_caller_address, stop_cheat_caller_address, spy_events, EventSpyAssertionsTrait };
+use snforge_std::{
+    declare, ContractClassTrait, DeclareResultTrait, start_cheat_caller_address,
+    stop_cheat_caller_address, spy_events, EventSpyAssertionsTrait
+};
 
 // Import the EscrowFactory component
 use escrownet_contract::escrow_factory::EscrowFactory;
@@ -31,11 +34,7 @@ fn SALT() -> felt252 {
 // Helper function to deploy the EscrowFactory contract
 fn deploy_escrow_factory() -> IEscrowFactoryDispatcher {
     let contract = declare("EscrowFactory");
-    let (contract_address, _err) = contract
-        .unwrap()
-        .contract_class()
-        .deploy(@array![])
-        .unwrap();
+    let (contract_address, _err) = contract.unwrap().contract_class().deploy(@array![]).unwrap();
     IEscrowFactoryDispatcher { contract_address }
 }
 
@@ -79,7 +78,7 @@ fn test_deploy_escrow() {
 
     // Assert that the deployed contract's address is in the list of escrow contracts
     assert(escrow_contracts.len() == 1, 'Incorrect number of escrow contracts');
-    assert(escrow_contracts<a href="undefined" target="_blank" className="bg-light-secondary dark:bg-dark-secondary px-1 rounded ml-1 no-underline text-xs text-black/70 dark:text-white/70 relative">0</a> == escrow_address, 'Incorrect escrow contract address');
+    assert(escrow_contracts[0] == escrow_address, 'Incorrect escrow contract address');
 }
 
 #[test]
@@ -94,15 +93,20 @@ fn test_deploy_multiple_escrows() {
 
     // Deploy two escrow contracts
     let escrow_address1 = factory_dispatcher.deploy_escrow(beneficiary, depositor, arbiter, salt);
-    let escrow_address2 = factory_dispatcher.deploy_escrow(beneficiary, depositor, arbiter, salt + 1_u8.into());
+    let escrow_address2 = factory_dispatcher
+        .deploy_escrow(beneficiary, depositor, arbiter, salt + 1_u8.into());
 
     // Get all escrow contracts
     let escrow_contracts = factory_dispatcher.get_escrow_contracts();
 
     // Assert that both deployed contract addresses are in the list of escrow contracts
     assert(escrow_contracts.len() == 2, 'Incorrect number of escrow contracts');
-    assert(escrow_contracts<a href="undefined" target="_blank" className="bg-light-secondary dark:bg-dark-secondary px-1 rounded ml-1 no-underline text-xs text-black/70 dark:text-white/70 relative">0</a> == escrow_address1, 'Incorrect escrow contract address for contract 1');
-    assert(escrow_contracts<a href="https://book.cairo-lang.org/testing/testing.html#writing-tests" target="_blank" className="bg-light-secondary dark:bg-dark-secondary px-1 rounded ml-1 no-underline text-xs text-black/70 dark:text-white/70 relative">1</a> == escrow_address2, 'Incorrect escrow contract address for contract 2');
+    assert(
+        escrow_contracts[0] == escrow_address1, 'Incorrect escrow contract address for contract 1'
+    );
+    assert(
+        escrow_contracts[1] == escrow_address2, 'Incorrect escrow contract address for contract 2'
+    );
 }
 
 #[test]
@@ -117,6 +121,7 @@ fn test_get_escrow_contracts_empty() {
 }
 
 #[test]
+
 fn test_escrow_contract_initialization() {
     let factory_dispatcher = deploy_escrow_factory();
 
