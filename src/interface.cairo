@@ -1,2 +1,2 @@
 pub mod iescrow;
-pub mod iescrowfactory;
+pub mod escrow_factory;
