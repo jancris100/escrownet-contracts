@@ -5,11 +5,10 @@ use snforge_std::{
 };
 
 // Import the EscrowFactory component
-use escrownet_contract::iescrowfactory::EscrowFactory;
+use escrownet_contract::escrow::escrow_factory::EscrowFactory;
 // Import the interface for the EscrowFactory
-use escrownet_contract::iescrowfactory::IEscrowFactoryDispatcherTrait;
-use escrownet_contract::iescrowfactory::IEscrowFactoryDispatcher;
-
+use escrownet_contract::escrow::escrow_factory::IEscrowFactoryDispatcherTrait;
+use escrownet_contract::escrow::escrow_factory::IEscrowFactoryDispatcher;
 // Relevants imports for the Escrow contract
 use escrownet_contract::interface::iescrow::IEscrowDispatcherTrait;
 use escrownet_contract::interface::iescrow::IEscrowDispatcher;
