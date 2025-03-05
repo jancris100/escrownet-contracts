@@ -1,5 +1,5 @@
 use starknet::ContractAddress;
-use snforge_std::{declare, ContractClassTrait, DeclareResultTrait, EventSpyAssertionsTrait};
+use snforge_std::{declare, ContractClassTrait, DeclareResultTrait};
 
 
 // Import the interface for the EscrowFactory
@@ -132,8 +132,8 @@ fn test_escrow_contract_initialization() {
     let escrow_contract_dispatcher = IEscrowDispatcher { contract_address: escrow_address };
 
     // Get the depositor and beneficiary from the Escrow contract
-    let escrow_beneficiary = escrow_contract_dispatcher.get_beneficiary();
-    let escrow_depositor = escrow_contract_dispatcher.get_depositor();
+    let escrow_beneficiary: ContractAddress = *escrow_contract_dispatcher.get_beneficiary();
+    let escrow_depositor: ContractAddress = *escrow_contract_dispatcher.get_depositor();
 
     // Assert that the constructor was called with the correct arguments
     assert(escrow_beneficiary == beneficiary, 'Incorrect beneficiary address');
