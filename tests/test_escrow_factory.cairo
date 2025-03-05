@@ -5,10 +5,10 @@ use snforge_std::{
 };
 
 // Import the EscrowFactory component
-use escrownet_contract::escrow::EscrowFactory;
+use escrownet_contract::iescrowfactory::EscrowFactory;
 // Import the interface for the EscrowFactory
-use escrownet_contract::escrow::IEscrowFactoryDispatcherTrait;
-use escrownet_contract::escrow::IEscrowFactoryDispatcher;
+use escrownet_contract::iescrowfactory::IEscrowFactoryDispatcherTrait;
+use escrownet_contract::iescrowfactory::IEscrowFactoryDispatcher;
 
 // Relevants imports for the Escrow contract
 use escrownet_contract::interface::iescrow::IEscrowDispatcherTrait;
@@ -121,7 +121,6 @@ fn test_get_escrow_contracts_empty() {
 }
 
 #[test]
-
 fn test_escrow_contract_initialization() {
     let factory_dispatcher = deploy_escrow_factory();
 
