@@ -21,10 +21,7 @@ mod TestContractWithFactory {
     }
 
     #[constructor]
-    fn constructor(
-        ref self: ContractState,
-        escrow_class_hash: ClassHash,
-    ) {
+    fn constructor(ref self: ContractState, escrow_class_hash: ClassHash,) {
         self.escrow_class_hash.write(escrow_class_hash);
     }
 

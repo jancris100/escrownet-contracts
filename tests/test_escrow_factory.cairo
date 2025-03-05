@@ -46,16 +46,15 @@ fn test_deploy_escrow() {
     let salt: felt252 = SALT();
 
     // Deploy an escrow contract THROUGH the TestContract
-    let escrow_address = test_contract_dispatcher.deploy_escrow(
-        beneficiary, depositor, arbiter, salt
-    );
+    let escrow_address = test_contract_dispatcher
+        .deploy_escrow(beneficiary, depositor, arbiter, salt);
 
     // Get all escrow contracts THROUGH the TestContract
     let escrow_contracts = test_contract_dispatcher.get_escrow_contracts();
 
     // Assert that the deployed contract's address is in the list of escrow contracts
-    assert(escrow_contracts.len() == 1, 'Incorrect number of escrow contracts');
-    assert(escrow_contracts<a href="undefined" target="_blank" className="bg-light-secondary dark:bg-dark-secondary px-1 rounded ml-1 no-underline text-xs text-black/70 dark:text-white/70 relative">0</a> == escrow_address, 'Incorrect escrow contract address');
+    assert(escrow_contracts.len() == 1, "Incorrect number of escrow contracts");
+    assert(escrow_contracts[0] == escrow_address, "Incorrect escrow contract address");
 }
 
 #[test]
@@ -70,24 +69,18 @@ fn test_deploy_multiple_escrows() {
     let salt: felt252 = SALT();
 
     // Deploy two escrow contracts THROUGH the TestContract
-    let escrow_address1 = test_contract_dispatcher.deploy_escrow(
-        beneficiary, depositor, arbiter, salt
-    );
-    let escrow_address2 = test_contract_dispatcher.deploy_escrow(
-        beneficiary, depositor, arbiter, salt + 1_u8.into()
-    );
+    let escrow_address1 = test_contract_dispatcher
+        .deploy_escrow(beneficiary, depositor, arbiter, salt);
+    let escrow_address2 = test_contract_dispatcher
+        .deploy_escrow(beneficiary, depositor, arbiter, salt + 1_u8.into());
 
     // Get all escrow contracts THROUGH the TestContract
     let escrow_contracts = test_contract_dispatcher.get_escrow_contracts();
 
     // Assert that both deployed contract addresses are in the list of escrow contracts
-    assert(escrow_contracts.len() == 2, 'Incorrect number of escrow contracts');
-    assert(
-        escrow_contracts<a href="undefined" target="_blank" className="bg-light-secondary dark:bg-dark-secondary px-1 rounded ml-1 no-underline text-xs text-black/70 dark:text-white/70 relative">0</a> == escrow_address1, 'Incorrect escrow contract address for contract 1'
-    );
-    assert(
-        escrow_contracts<a href="https://docs.openzeppelin.com/contracts-cairo/1.0.0/components.html" target="_blank" className="bg-light-secondary dark:bg-dark-secondary px-1 rounded ml-1 no-underline text-xs text-black/70 dark:text-white/70 relative">1</a> == escrow_address2, 'Incorrect escrow contract address for contract 2'
-    );
+    assert(escrow_contracts.len() == 2, "Incorrect contracts");
+    assert(escrow_contracts[0] == escrow_address1, "Incorrect 1");
+    assert(escrow_contracts[1] == escrow_address2, "Incorrect 2");
 }
 
 #[test]
@@ -98,5 +91,5 @@ fn test_get_escrow_contracts_empty() {
     let escrow_contracts = test_contract_dispatcher.get_escrow_contracts();
 
     // Assert that the returned array is empty
-    assert(escrow_contracts.len() == 0, 'Escrow contracts should be empty');
+    assert(escrow_contracts.len() == 0, "Escrow contracts should be empty");
 }
