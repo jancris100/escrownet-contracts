@@ -1,11 +1,7 @@
 use starknet::ContractAddress;
-use snforge_std::{
-    declare, ContractClassTrait, DeclareResultTrait, start_cheat_caller_address,
-    stop_cheat_caller_address, spy_events, EventSpyAssertionsTrait
-};
+use snforge_std::{declare, ContractClassTrait, DeclareResultTrait, EventSpyAssertionsTrait};
 
-// Import the EscrowFactory component
-use escrownet_contract::escrow::escrow_factory::EscrowFactory;
+
 // Import the interface for the EscrowFactory
 use escrownet_contract::escrow::escrow_factory::IEscrowFactoryDispatcherTrait;
 use escrownet_contract::escrow::escrow_factory::IEscrowFactoryDispatcher;
