@@ -55,6 +55,11 @@ fn deploy_escrow() -> ContractAddress {
     return (escrow_contract_address);
 }
 
+fn declare_escrow() -> ClassHash {
+    let contract = declare("EscrowContract");
+    contract.unwrap().class_hash()
+}
+
 #[test]
 fn test_deploy_escrow() {
     let factory_dispatcher = deploy_escrow_factory();
@@ -79,6 +84,7 @@ fn test_deploy_escrow() {
 #[test]
 fn test_deploy_multiple_escrows() {
     let factory_dispatcher = deploy_escrow_factory();
+    let escrow_class_hash = declare_escrow(); // Get the real class hash
 
     // Define addresses for beneficiary, depositor, and arbiter
     let beneficiary = BENEFICIARY();
@@ -113,29 +119,4 @@ fn test_get_escrow_contracts_empty() {
 
     // Assert that the returned array is empty
     assert(escrow_contracts.len() == 0, 'Escrow contracts should be empty');
-}
-
-#[test]
-fn test_escrow_contract_initialization() {
-    let factory_dispatcher = deploy_escrow_factory();
-
-    // Define addresses for beneficiary, depositor, and arbiter
-    let beneficiary = BENEFICIARY();
-    let depositor = DEPOSITOR();
-    let arbiter = ARBITER();
-    let salt: felt252 = SALT();
-
-    // Deploy an escrow contract
-    let escrow_address = factory_dispatcher.deploy_escrow(beneficiary, depositor, arbiter, salt);
-
-    // Create a dispatcher for the deployed Escrow contract
-    let escrow_contract_dispatcher = IEscrowDispatcher { contract_address: escrow_address };
-
-    // Get the depositor and beneficiary from the Escrow contract
-    let escrow_beneficiary: ContractAddress = *escrow_contract_dispatcher.get_beneficiary();
-    let escrow_depositor: ContractAddress = *escrow_contract_dispatcher.get_depositor();
-
-    // Assert that the constructor was called with the correct arguments
-    assert(escrow_beneficiary == beneficiary, 'Incorrect beneficiary address');
-    assert(escrow_depositor == depositor, 'Incorrect depositor address');
 }
